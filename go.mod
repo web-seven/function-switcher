@@ -1,4 +1,4 @@
-module github.com/crossplane/function-template-go
+module github.com/kndpio/function-switcher
 
 go 1.21
 
