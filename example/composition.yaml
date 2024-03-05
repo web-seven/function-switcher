@@ -1,0 +1,67 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: function-switcher
+spec:
+  mode: Pipeline
+  pipeline:
+  - step: patch-and-transform
+    functionRef:
+      name: function-patch-and-transform
+    input:
+      apiVersion: pt.fn.crossplane.io/v1beta1
+      kind: Resources
+      resources:
+
+      - name: resourceOne
+        base:
+          apiVersion: example.crossplane.io/v1
+          kind: Resource
+          spec:
+            field1: ""
+            field2: ""
+        patches:
+          - type: FromCompositeFieldPath
+            fromFieldPath: "spec.resourceOne.field1"
+            toFieldPath: "spec.field1"
+          - type: FromCompositeFieldPath
+            fromFieldPath: "spec.resourceOne.field2"
+            toFieldPath: "spec.field2"
+
+      - name: resourceTwo
+        base:
+          apiVersion: example.crossplane.io/v1
+          kind: Resource
+          spec:
+            field1: ""
+            field2: ""
+        patches:
+          - type: FromCompositeFieldPath
+            fromFieldPath: "spec.resourceTwo.field1"
+            toFieldPath: "spec.field1"
+          - type: FromCompositeFieldPath
+            fromFieldPath: "spec.resourceTwo.field2"
+            toFieldPath: "spec.field2"
+
+      - name: resourceThree
+        base:
+          apiVersion: example.crossplane.io/v1
+          kind: Resource
+          spec:
+            field1: ""
+            field2: ""
+        patches:
+          - type: FromCompositeFieldPath
+            fromFieldPath: "spec.resourceThree.field1"
+            toFieldPath: "spec.field1"
+          - type: FromCompositeFieldPath
+            fromFieldPath: "spec.resourceThree.field2"
+            toFieldPath: "spec.field2"
+
+  - step: enable-disable
+    functionRef:
+      name: function-switcher
+
+  compositeTypeRef:
+    apiVersion: example.crossplane.io/v1
+    kind: XR

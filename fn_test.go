@@ -31,25 +31,221 @@ func TestRunFunction(t *testing.T) {
 		args   args
 		want   want
 	}{
-		"ResponseIsReturned": {
-			reason: "The Function should return a fatal result if no input was specified",
+		"DesiredResourcesAreRemoved": {
+			reason: "Desired resources in annotation field switcher.fn.kndp.io/disabled are removed from the desired state",
 			args: args{
 				req: &fnv1beta1.RunFunctionRequest{
-					Meta: &fnv1beta1.RequestMeta{Tag: "hello"},
-					Input: resource.MustStructJSON(`{
-						"apiVersion": "template.fn.crossplane.io/v1beta1",
-						"kind": "Input",
-						"example": "Hello, world"
-					}`),
+					Observed: &fnv1beta1.State{
+						Composite: &fnv1beta1.Resource{
+							Resource: resource.MustStructJSON(`
+							{
+								"apiVersion":"example.org/v1",
+								"kind":"XR",
+								"metadata": {
+									"annotations": {
+										"switcher.fn.kndp.io/disabled": "resourceTwo"
+									}
+								}
+							}
+							`),
+						},
+					},
+					Desired: &fnv1beta1.State{
+						Resources: map[string]*fnv1beta1.Resource{
+							"resourceOne": {
+								Resource: resource.MustStructJSON(`
+								{
+									"apiVersion":"example.org/v1",
+									"kind":"Resource"
+								}
+								`),
+							},
+							"resourceTwo": {
+								Resource: resource.MustStructJSON(`
+								{
+									"apiVersion":"example.org/v1",
+									"kind":"Resource"
+								}
+								`),
+							},
+							"resourceThree": {
+								Resource: resource.MustStructJSON(`
+								{
+									"apiVersion":"example.org/v1",
+									"kind":"Resource"
+								}
+								`),
+							},
+						},
+					},
 				},
 			},
 			want: want{
 				rsp: &fnv1beta1.RunFunctionResponse{
-					Meta: &fnv1beta1.ResponseMeta{Tag: "hello", Ttl: durationpb.New(response.DefaultTTL)},
-					Results: []*fnv1beta1.Result{
-						{
-							Severity: fnv1beta1.Severity_SEVERITY_NORMAL,
-							Message:  "I was run with input \"Hello, world\"!",
+					Meta: &fnv1beta1.ResponseMeta{Ttl: durationpb.New(response.DefaultTTL)},
+					Desired: &fnv1beta1.State{
+						Resources: map[string]*fnv1beta1.Resource{
+							"resourceOne": {
+								Resource: resource.MustStructJSON(`
+								{
+									"apiVersion":"example.org/v1",
+									"kind":"Resource"
+								}
+								`),
+							},
+							"resourceThree": {
+								Resource: resource.MustStructJSON(`
+								{
+									"apiVersion":"example.org/v1",
+									"kind":"Resource"
+								}
+								`),
+							},
+						},
+					},
+				},
+			},
+		},
+		"DesiredResourcesAreRetained": {
+			reason: "Desired resources in annotation field switcher.fn.kndp.io/enabled are retained in the desired state",
+			args: args{
+				req: &fnv1beta1.RunFunctionRequest{
+					Observed: &fnv1beta1.State{
+						Composite: &fnv1beta1.Resource{
+							Resource: resource.MustStructJSON(`
+							{
+								"apiVersion":"example.org/v1",
+								"kind":"XR",
+								"metadata": {
+									"annotations": {
+										"switcher.fn.kndp.io/enabled": "resourceTwo"
+									}
+								}
+							}
+							`),
+						},
+					},
+					Desired: &fnv1beta1.State{
+						Resources: map[string]*fnv1beta1.Resource{
+							"resourceOne": {
+								Resource: resource.MustStructJSON(`
+								{
+									"apiVersion":"example.org/v1",
+									"kind":"Resource"
+								}
+								`),
+							},
+							"resourceTwo": {
+								Resource: resource.MustStructJSON(`
+								{
+									"apiVersion":"example.org/v1",
+									"kind":"Resource"
+								}
+								`),
+							},
+							"resourceThree": {
+								Resource: resource.MustStructJSON(`
+								{
+									"apiVersion":"example.org/v1",
+									"kind":"Resource"
+								}
+								`),
+							},
+						},
+					},
+				},
+			},
+			want: want{
+				rsp: &fnv1beta1.RunFunctionResponse{
+					Meta: &fnv1beta1.ResponseMeta{Ttl: durationpb.New(response.DefaultTTL)},
+					Desired: &fnv1beta1.State{
+						Resources: map[string]*fnv1beta1.Resource{
+							"resourceTwo": {
+								Resource: resource.MustStructJSON(`
+								{
+									"apiVersion":"example.org/v1",
+									"kind":"Resource"
+								}
+								`),
+							},
+						},
+					},
+				},
+			},
+		},
+		"Ensuring preservation of state from previous functions when no annotations are provided": {
+			reason: "Desired resources in annotation field switcher.fn.kndp.io/enabled are retained in the desired state",
+			args: args{
+				req: &fnv1beta1.RunFunctionRequest{
+					Observed: &fnv1beta1.State{
+						Composite: &fnv1beta1.Resource{
+							Resource: resource.MustStructJSON(`
+							{
+								"apiVersion":"example.org/v1",
+								"kind":"XR"
+							}
+							`),
+						},
+					},
+					Desired: &fnv1beta1.State{
+						Resources: map[string]*fnv1beta1.Resource{
+							"resourceOne": {
+								Resource: resource.MustStructJSON(`
+								{
+									"apiVersion":"example.org/v1",
+									"kind":"Resource"
+								}
+								`),
+							},
+							"resourceTwo": {
+								Resource: resource.MustStructJSON(`
+								{
+									"apiVersion":"example.org/v1",
+									"kind":"Resource"
+								}
+								`),
+							},
+							"resourceThree": {
+								Resource: resource.MustStructJSON(`
+								{
+									"apiVersion":"example.org/v1",
+									"kind":"Resource"
+								}
+								`),
+							},
+						},
+					},
+				},
+			},
+			want: want{
+				rsp: &fnv1beta1.RunFunctionResponse{
+					Meta: &fnv1beta1.ResponseMeta{Ttl: durationpb.New(response.DefaultTTL)},
+					Desired: &fnv1beta1.State{
+						Resources: map[string]*fnv1beta1.Resource{
+							"resourceOne": {
+								Resource: resource.MustStructJSON(`
+								{
+									"apiVersion":"example.org/v1",
+									"kind":"Resource"
+								}
+								`),
+							},
+							"resourceTwo": {
+								Resource: resource.MustStructJSON(`
+								{
+									"apiVersion":"example.org/v1",
+									"kind":"Resource"
+								}
+								`),
+							},
+							"resourceThree": {
+								Resource: resource.MustStructJSON(`
+								{
+									"apiVersion":"example.org/v1",
+									"kind":"Resource"
+								}
+								`),
+							},
 						},
 					},
 				},
@@ -61,7 +257,6 @@ func TestRunFunction(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			f := &Function{log: logging.NewNopLogger()}
 			rsp, err := f.RunFunction(tc.args.ctx, tc.args.req)
-
 			if diff := cmp.Diff(tc.want.rsp, rsp, protocmp.Transform()); diff != "" {
 				t.Errorf("%s\nf.RunFunction(...): -want rsp, +got rsp:\n%s", tc.reason, diff)
 			}

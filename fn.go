@@ -2,7 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
+	"slices"
 	"strings"
 
 	"github.com/crossplane/function-sdk-go/logging"
@@ -10,6 +11,7 @@ import (
 	"github.com/crossplane/function-sdk-go/request"
 	"github.com/crossplane/function-sdk-go/response"
 	"github.com/pkg/errors"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Function struct {
@@ -19,6 +21,7 @@ type Function struct {
 }
 
 func (f *Function) RunFunction(_ context.Context, req *fnv1beta1.RunFunctionRequest) (*fnv1beta1.RunFunctionResponse, error) {
+	f.log.Info("Running function", "tag", req.GetMeta().GetTag())
 
 	rsp := response.To(req, response.DefaultTTL)
 
@@ -28,9 +31,28 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1beta1.RunFunctionRequ
 		return rsp, nil
 	}
 
-	s, _ := oxr.Resource.GetString("metadata.annotation.switcher")
+	var switchOn []string
+	var switchOff []string
+	meta := v1.ObjectMeta{}
+	m := oxr.Resource.Object["metadata"]
+	mm, _ := json.Marshal(m)
+	json.Unmarshal(mm, &meta)
 
-	resourcesToSwitch := strings.Split(s, ",")
+	for k, v := range meta.Annotations {
+		if strings.Contains(k, "switcher.fn.kndp.io/enabled") {
+			if switchOn == nil {
+				switchOn = []string{}
+			}
+			switchOn = append(switchOn, strings.Split(v, ",")...)
+		}
+
+		if strings.Contains(k, "switcher.fn.kndp.io/disabled") {
+			if switchOff == nil {
+				switchOff = []string{}
+			}
+			switchOff = append(switchOff, strings.Split(v, ",")...)
+		}
+	}
 
 	desired, err := request.GetDesiredComposedResources(req)
 	if err != nil {
@@ -39,16 +61,10 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1beta1.RunFunctionRequ
 	}
 
 	for r := range desired {
-		found := false
-		for _, rs := range resourcesToSwitch {
-			if string(r) == rs {
-				found = true
-				break
-			}
+		if switchOff != nil && slices.Contains[[]string, string](switchOff, string(r)) {
+			delete(desired, r)
 		}
-
-		if found {
-			fmt.Println(r)
+		if switchOn != nil && !slices.Contains[[]string, string](switchOn, string(r)) {
 			delete(desired, r)
 		}
 	}
