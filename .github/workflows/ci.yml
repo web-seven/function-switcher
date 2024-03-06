@@ -149,5 +149,5 @@ jobs:
           password: ${{ secrets.XPKG_TOKEN }}
 
       - name: Push Multi-Platform Package to Upbound
-        if: ${{ ! startsWith(github.ref, 'refs/tags/') && env.XPKG_ACCESS_ID != '' }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') && env.XPKG_ACCESS_ID != '' }}
         run: "./crossplane --verbose xpkg push --package-files $(echo *.xpkg|tr ' ' ,) ${{ env.XPKG }}:${{ env.XPKG_VERSION }}"
