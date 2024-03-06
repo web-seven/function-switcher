@@ -125,7 +125,7 @@ jobs:
   # XPKG_ACCESS_ID and XPKG_TOKEN secrets were provided.
   push:
     runs-on: ubuntu-22.04
-    if: ${{ startsWith(github.ref, 'refs/tags/') && env.XPKG_ACCESS_ID != '' }}
+    if: ${{ startsWith(github.ref, 'refs/tags/') && secrets.XPKG_ACCESS_ID != '' }}
     needs:
       - build
     steps:
