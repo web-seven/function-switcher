@@ -34,7 +34,7 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1beta1.RunFunctionRequ
 
 	switchOn, switchOff, err := collectSwitches(req, rsp)
 	if err != nil {
-		return rsp, nil
+		return rsp, err
 	}
 
 	filterDesired(desired, switchOff, switchOn)
@@ -59,7 +59,7 @@ func collectSwitches(req *fnv1beta1.RunFunctionRequest, rsp *fnv1beta1.RunFuncti
 	var switchOff []string
 	m := oxr.Resource.Object["metadata"]
 
-	meta, err := toMeta(m.(map[string]interface{}))
+	meta, err := toMeta(m)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -97,7 +97,7 @@ func filterDesired(desired map[resource.Name]*resource.DesiredComposed, switchOf
 	return desired
 }
 
-func toMeta(m map[string]interface{}) (v1.ObjectMeta, error) {
+func toMeta(m interface{}) (v1.ObjectMeta, error) {
 	meta := v1.ObjectMeta{}
 
 	mm, err := json.Marshal(m)
