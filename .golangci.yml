@@ -36,8 +36,6 @@ linters-settings:
     sections:
       - standard
       - default
-      - prefix(github.com/crossplane)
-      - prefix(github.com/crossplane-contrib)
       - blank
       - dot
 

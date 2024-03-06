@@ -1,6 +1,16 @@
-# Replace this with your XR!
 apiVersion: example.crossplane.io/v1
 kind: XR
 metadata:
   name: example-xr
-spec: {}
+  annotations:
+    switcher.fn.kndp.io/disabled: "resourceTwo"
+spec:
+  resourceOne:
+    field1: "one"
+    field2: "two"
+  resourceTwo:
+    field1: "three"
+    field2: "four"
+  resourceThree:
+    field1: "five"
+    field2: "six"
