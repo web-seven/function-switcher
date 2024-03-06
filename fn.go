@@ -15,6 +15,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// Function returns whatever response you ask it to.
 type Function struct {
 	fnv1beta1.UnimplementedFunctionRunnerServiceServer
 
