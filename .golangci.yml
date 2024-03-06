@@ -36,7 +36,6 @@ linters-settings:
     sections:
       - standard
       - default
-      - prefix(github.com/kndpio)
       - blank
       - dot
 
