@@ -1,5 +1,5 @@
 # function-switcher
-[![CI](https://github.com/kndpio/function-switcher/actions/workflows/ci.yml/badge.svg)](https://github.com/kndpio/function-template-go/actions/workflows/ci.yml)
+[![CI](https://github.com/kndpio/function-switcher/actions/workflows/ci.yml/badge.svg)](https://github.com/kndpio/function-switcher/actions/workflows/ci.yml)
 
 Function Switcher is a Crossplane function that enables Composition users to enable or disable creation of resources, without update schema of XRD, just using annotations like in on this example:
 ```yaml
