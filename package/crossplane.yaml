@@ -3,4 +3,13 @@ apiVersion: meta.pkg.crossplane.io/v1beta1
 kind: Function
 metadata:
   name: function-switcher
+  annotations:
+    meta.crossplane.io/maintainer: KNDP <kndpdevs@gmail.com>
+    meta.crossplane.io/source: github.com/kndpio/function-switcher
+    meta.crossplane.io/license: Apache-2.0
+    meta.crossplane.io/description: |
+      A Composition function that switch resources by annotations of Composite Resource
+    meta.crossplane.io/readme: |
+      Function Switcher is a Crossplane function that enables Composition users to enable or disable creation of resources, 
+      without update schema of XRD, just using simple annotations of Composite Resource.
 spec: {}
