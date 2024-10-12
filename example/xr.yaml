@@ -3,7 +3,8 @@ kind: XR
 metadata:
   name: example-xr
   annotations:
-    switcher.fn.kndp.io/disabled: "resourceTwo"
+    switcher.fn.kndp.io/enabled: 'resourceThree,resourceOne'
+    switcher.fn.kndp.io/disabled: '{{ if ne .observed.composite.resource.status.ready true }}resourceThree{{ end }}'
 spec:
   resourceOne:
     field1: "one"
@@ -14,3 +15,5 @@ spec:
   resourceThree:
     field1: "five"
     field2: "six"
+status:
+  ready: false

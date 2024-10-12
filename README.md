@@ -104,3 +104,26 @@ spec:
     apiVersion: example.crossplane.io/v1
     kind: XR
 ```
+## Templates
+You could use simple Go template in function annotation for enable or disable composition resources conditionally using `.observed` and `.desired`, or even print name of resource:
+```yaml
+apiVersion: example.crossplane.io/v1
+kind: XR
+metadata:
+  name: example-xr
+  annotations:
+    switcher.fn.kndp.io/enabled: 'resourceThree,resourceOne'
+    switcher.fn.kndp.io/disabled: '{{ if ne .observed.composite.resource.status.ready true }}resourceThree{{ end }}'
+spec:
+  resourceOne:
+    field1: "one"
+    field2: "two"
+  resourceTwo:
+    field1: "three"
+    field2: "four"
+  resourceThree:
+    field1: "five"
+    field2: "six"
+status:
+  ready: false
+```
