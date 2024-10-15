@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"html/template"
 	"slices"
 	"strings"
 
@@ -12,7 +14,13 @@ import (
 	"github.com/crossplane/function-sdk-go/resource"
 	"github.com/crossplane/function-sdk-go/response"
 	"github.com/pkg/errors"
+	"google.golang.org/protobuf/encoding/protojson"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+const (
+	enableAnnotation = "switcher.fn.kndp.io/enabled"
+	disableAnnotaion = "switcher.fn.kndp.io/disabled"
 )
 
 // Function returns whatever response you ask it to.
@@ -34,7 +42,7 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1beta1.RunFunctionRequ
 		return rsp, nil
 	}
 
-	switchOn, switchOff, err := collectSwitches(req, rsp)
+	switchOn, switchOff, err := f.collectSwitches(req, rsp)
 	if err != nil {
 		return rsp, err
 	}
@@ -51,7 +59,8 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1beta1.RunFunctionRequ
 	return rsp, nil
 }
 
-func collectSwitches(req *fnv1beta1.RunFunctionRequest, rsp *fnv1beta1.RunFunctionResponse) ([]string, []string, error) {
+// Collect enabled and disable resources names from annotations
+func (f *Function) collectSwitches(req *fnv1beta1.RunFunctionRequest, rsp *fnv1beta1.RunFunctionResponse) ([]string, []string, error) {
 	oxr, err := request.GetObservedCompositeResource(req)
 	if err != nil {
 		response.Fatal(rsp, errors.Wrapf(err, "cannot get observed composite resource from %T", req))
@@ -67,16 +76,24 @@ func collectSwitches(req *fnv1beta1.RunFunctionRequest, rsp *fnv1beta1.RunFuncti
 	}
 
 	for k, v := range meta.Annotations {
-		if strings.Contains(k, "switcher.fn.kndp.io/enabled") {
+		if strings.Contains(k, enableAnnotation) {
 			if switchOn == nil {
 				switchOn = []string{}
+			}
+			v, err = f.renderTemplate(v, enableAnnotation, req)
+			if err != nil {
+				return []string{}, []string{}, err
 			}
 			switchOn = append(switchOn, strings.Split(v, ",")...)
 		}
 
-		if strings.Contains(k, "switcher.fn.kndp.io/disabled") {
+		if strings.Contains(k, disableAnnotaion) {
 			if switchOff == nil {
 				switchOff = []string{}
+			}
+			v, err = f.renderTemplate(v, disableAnnotaion, req)
+			if err != nil {
+				return []string{}, []string{}, err
 			}
 			switchOff = append(switchOff, strings.Split(v, ",")...)
 		}
@@ -112,4 +129,42 @@ func toMeta(m interface{}) (v1.ObjectMeta, error) {
 	}
 
 	return meta, nil
+}
+
+// Render Go template against request data
+func (f *Function) renderTemplate(tplString string, tplName string, req *fnv1beta1.RunFunctionRequest) (string, error) {
+	reqMap, err := convertToMap(req)
+	if err != nil {
+		return tplString, err
+	}
+
+	tmpl, err := template.New(tplName).Parse(tplString)
+	if err != nil {
+		return tplString, err
+	}
+	f.log.Debug("constructed request map", "request", reqMap)
+
+	buf := &bytes.Buffer{}
+
+	if err := tmpl.Execute(buf, reqMap); err != nil {
+		return tplString, err
+	}
+
+	f.log.Debug("rendered manifests", "manifests", buf.String())
+	return buf.String(), nil
+}
+
+// Convert function request to map
+func convertToMap(req *fnv1beta1.RunFunctionRequest) (map[string]any, error) {
+	jReq, err := protojson.Marshal(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot marshal request from proto to json")
+	}
+
+	var mReq map[string]any
+	if err := json.Unmarshal(jReq, &mReq); err != nil {
+		return nil, errors.Wrap(err, "cannot unmarshal json to map[string]any")
+	}
+
+	return mReq, nil
 }

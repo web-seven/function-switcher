@@ -16,7 +16,7 @@ spec:
       - name: resourceOne
         base:
           apiVersion: example.crossplane.io/v1
-          kind: Resource
+          kind: ResourceOne
           spec:
             field1: ""
             field2: ""
@@ -31,7 +31,7 @@ spec:
       - name: resourceTwo
         base:
           apiVersion: example.crossplane.io/v1
-          kind: Resource
+          kind: ResourceTwo
           spec:
             field1: ""
             field2: ""
@@ -46,7 +46,7 @@ spec:
       - name: resourceThree
         base:
           apiVersion: example.crossplane.io/v1
-          kind: Resource
+          kind: ResourceThree
           spec:
             field1: ""
             field2: ""
